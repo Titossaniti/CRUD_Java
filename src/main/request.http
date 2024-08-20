@@ -1,0 +1,25 @@
+GET http://localhost:8080/api/users
+
+###
+
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "age": 30
+}
+
+###
+
+PUT http://localhost:8080/api/users/2
+Content-Type: application/json
+
+{
+  "name": "Jane Doe",
+  "age": 35
+}
+
+###
+
+DELETE http://localhost:8080/api/users/2
