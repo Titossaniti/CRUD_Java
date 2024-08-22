@@ -1,8 +1,10 @@
 package com.example.democrud.model;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class LoginUserModel {
     private String email;
     private String password;
