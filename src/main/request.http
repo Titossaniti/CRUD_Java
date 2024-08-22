@@ -1,3 +1,31 @@
+#Ajoute une requête pour inscrire un utilisateur :
+POST http://localhost:8080/auth/signup
+Content-Type: application/json
+
+{
+  "email": "q@q.com",
+  "password": "123",
+  "name": "Quentin",
+  "age": 25
+}
+
+###
+
+#Ajoute une requête pour se connecter et obtenir un token JWT:
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+"email": "q@q.com",
+"password": "123"
+}
+
+###
+#Pour accéder à une ressource protégée, on utilise le token obtenu à partir de la connexion :
+GET http://localhost:8080/api/users
+Authorization: Bearer <eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJxQHEuY29tIiwiaWF0IjoxNzI0MjUyMzY4LCJleHAiOjE3MjQzMzg3Njh9.w27vXPqbQEOaamj8pHn96sEDmNX7ttXI-pMJRnPVNNf2zi-8SmTWqH0ps5b0LPwZMxg2ugBym8tma4RHngF6qA>
+###
+#Requetes CRUD
 GET http://localhost:8080/api/users
 
 ###
@@ -6,7 +34,7 @@ POST http://localhost:8080/api/users
 Content-Type: application/json
 
 {
-  "name": "John Doe",
+  "name": "test token",
   "age": 30
 }
 
