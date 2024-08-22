@@ -7,58 +7,64 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Gérer les exceptions d'accès refusé (erreurs 403)
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", "Accès refusé");
-        body.put("details", ex.getMessage());
-        return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
-    }
-
-    // Gérer les exceptions d'authentification
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Object> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", "Identifiants incorrects");
-        body.put("details", ex.getMessage());
-        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
-    }
-
-    // Gérer les exceptions lorsque l'utilisateur n'est pas trouvé
-    @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<Object> handleUsernameNotFoundException(UsernameNotFoundException ex, WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", "Utilisateur non trouvé");
-        body.put("details", ex.getMessage());
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
-    }
-
-    // Gérer les erreurs de validation
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage())
-        );
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
-    }
-
-    // Gérer les autres exceptions générales
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleGlobalException(Exception ex, WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", "Erreur interne du serveur");
-        body.put("details", ex.getMessage());
-        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<Object> handleAllExceptions(Exception ex, WebRequest request) {
+        ex.printStackTrace(); // Imprimer l'erreur dans la console
+
+        Map<String, Object> response = new HashMap<>();
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        // Gestion des exceptions courantes avec conditions précises
+        if (ex instanceof BadCredentialsException) {
+            response.put("message", "Identifiant ou mot de passe incorrect.");
+            status = HttpStatus.UNAUTHORIZED; // 401
+        } else if (ex instanceof AccessDeniedException) {
+            // On peut préciser les différents types d'accès refusé
+            if (ex.getMessage().contains("Insufficient scope")) {
+                response.put("message", "Droits insuffisants pour accéder à cette ressource.");
+            } else {
+                response.put("message", "Accès refusé.");
+            }
+            status = HttpStatus.FORBIDDEN; // 403
+        } else if (ex instanceof UsernameNotFoundException) {
+            response.put("message", "Utilisateur non trouvé.");
+            status = HttpStatus.NOT_FOUND; // 404
+        } else if (ex instanceof MethodArgumentNotValidException) {
+            response.put("message", "Erreur de validation des données.");
+            status = HttpStatus.BAD_REQUEST; // 400
+
+            // Détails des erreurs de validation
+            Map<String, String> validationErrors = new HashMap<>();
+            ((MethodArgumentNotValidException) ex).getBindingResult().getFieldErrors()
+                    .forEach(error -> validationErrors.put(error.getField(), error.getDefaultMessage()));
+            response.put("erreurs", validationErrors);
+        } else if (ex instanceof IllegalArgumentException) {
+            response.put("message", "Paramètre illégal : " + ex.getMessage());
+            status = HttpStatus.BAD_REQUEST; // 400
+        } else if (ex.getMessage().contains("TokenExpiredException")) {
+            response.put("message", "Votre session a expiré, veuillez vous reconnecter.");
+            status = HttpStatus.FORBIDDEN; // 403
+        } else if (ex.getMessage().contains("TokenSignatureException")) {
+            response.put("message", "Signature de token invalide.");
+            status = HttpStatus.UNAUTHORIZED; // 401
+        } else {
+            response.put("message", "Une erreur inattendue est survenue.");
+        }
+
+        response.put("status", status.value());
+        response.put("erreur", status.getReasonPhrase());
+        response.put("timestamp", System.currentTimeMillis());
+        response.put("path", request.getDescription(false).substring(4));
+
+        return new ResponseEntity<>(response, status);
     }
 }
