@@ -40,11 +40,11 @@ Content-Type: application/json
 
 ###
 
-PUT http://localhost:8080/api/users/2
+PUT http://localhost:8080/api/users/9
 Content-Type: application/json
 
 {
-  "name": "Jane Doe",
+  "name": "Jane",
   "age": 35
 }
 

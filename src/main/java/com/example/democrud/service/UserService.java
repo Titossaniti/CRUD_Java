@@ -7,8 +7,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -40,6 +42,29 @@ public class UserService implements UserDetailsService {
 
     public void deleteUser(Long id) {
         userRepo.deleteById(id);
+    }
+
+    public User updateUserPartially(Long id, Map<String, Object> updates) {
+        User user = userRepo.findById(id).orElseThrow(() -> new RuntimeException("Utilisateur avec l'id " + id + " n'a pas été trouvé"));
+
+        updates.forEach((key, value) -> {
+            switch (key) {
+                case "name":
+                    user.setName((String) value);
+                    break;
+                case "email":
+                    user.setEmail((String) value);
+                    break;
+                case "age":
+                    user.setAge(Integer.parseInt((String) value));
+                    break;
+                // Ajoutez ici d'autres champs à mettre à jour si nécessaire
+                default:
+                    throw new IllegalArgumentException("Le champs " + key + " n'est pas modifiable.");
+            }
+        });
+
+        return userRepo.save(user);
     }
 
     // Implémentation de UserDetailsService
