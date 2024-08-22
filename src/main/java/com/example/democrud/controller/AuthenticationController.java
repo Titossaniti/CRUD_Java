@@ -3,6 +3,7 @@ package com.example.democrud.controller;
 import com.example.democrud.model.LoginUserModel;
 import com.example.democrud.model.RegisterUserModel;
 import com.example.democrud.model.User;
+import com.example.democrud.responses.LoginResponse;
 import com.example.democrud.service.AuthenticationService;
 import com.example.democrud.service.JwtService;
 import org.springframework.http.ResponseEntity;
@@ -26,10 +27,16 @@ public class AuthenticationController {
         return ResponseEntity.ok(registeredUser);
     }
 
+
     @PostMapping("/login")
-    public ResponseEntity<String> authenticate(@RequestBody LoginUserModel loginUserDto) {
+    public ResponseEntity<LoginResponse> authenticate(@RequestBody LoginUserModel loginUserDto) {
         User authenticatedUser = authenticationService.authenticate(loginUserDto);
         String token = jwtService.generateToken(authenticatedUser);
-        return ResponseEntity.ok(token);
+
+        // Supposons que vous avez une méthode qui retourne le temps d'expiration en secondes
+        long expiresIn = jwtService.getExpirationInSeconds(token);
+
+        LoginResponse response = new LoginResponse(token, expiresIn);
+        return ResponseEntity.ok(response);
     }
 }

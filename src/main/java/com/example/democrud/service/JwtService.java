@@ -57,4 +57,18 @@ public class JwtService {
                 .signWith(SignatureAlgorithm.HS512, secret)
                 .compact();
     }
+
+    public long getExpirationInSeconds(String token) {
+        // Exemple pour obtenir l'expiration à partir du token JWT
+        Claims claims = Jwts.parser()
+                .setSigningKey(secret)
+                .parseClaimsJws(token)
+                .getBody();
+
+        Date expirationDate = claims.getExpiration();
+        long now = System.currentTimeMillis();
+
+        return (expirationDate.getTime() - now) / 1000; // Convertir en secondes
+    }
+
 }
